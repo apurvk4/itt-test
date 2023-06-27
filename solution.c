@@ -80,6 +80,106 @@ Input_t add_corp(int val)
     temp->is_town = false;
     return *temp;
 }
+
+typedef struct list_node
+{
+    node_t data;
+    struct list_node *next;
+} list_node_t;
+
+typedef struct linked_list
+{
+    list_node_t *head, *tail;
+} linked_list_t;
+int list_insert(linked_list_t *list, node_t item)
+{
+
+    list_node_t *temp = (list_node_t *)malloc(sizeof(list_node_t));
+    temp->data = item;
+    temp->next = NULL;
+    if (list->tail == NULL)
+    {
+        list->head = temp;
+        list->tail = temp;
+        return 0;
+    }
+    list->tail->next = temp;
+    list->tail = temp;
+
+    return 0;
+}
+int list_remove(linked_list_t *list)
+{
+    if (list->head == list->tail)
+    {
+        if (list->head != NULL)
+        {
+            free(list->head);
+        }
+        list->head = NULL;
+        list->tail = NULL;
+        return 0;
+    }
+    list_node_t *temp = list->head;
+    while (temp->next != list->tail)
+    {
+        temp = temp->next;
+    }
+    free(list->tail);
+    temp->next = NULL;
+    list->tail = temp;
+    return 0;
+}
+linked_list_t *ll_a = NULL;
+linked_list_t *ll_b = NULL;
+bool get_ancestors(node_t *root, int target, linked_list_t *ll)
+{
+    if (root == NULL)
+    {
+        return false;
+    }
+    if (root->value.is_corp && root->value.corp_code == target)
+    {
+        return true;
+    }
+    for (int i = 0; i < root->curr_len; i++)
+    {
+        if (get_ancestors(root->list[i], target, ll))
+        {
+            list_insert(ll, *root);
+            return true;
+        }
+    }
+    return false;
+}
+void list_display(linked_list_t *list)
+{
+    list_node_t *current = list->head;
+    printf("List : ");
+    while (current != NULL)
+    {
+        // printf("%d,",current->data);
+        if (current->data.value.is_city)
+        {
+            printf("city : %s \t", current->data.value.city);
+        }
+        if (current->data.value.is_suburb)
+        {
+            printf("suburban : %s \t", current->data.value.suburbs);
+        }
+        if (current->data.value.is_town)
+        {
+            printf("town : %s \t", current->data.value.town);
+        }
+        if (current->data.value.is_corp)
+        {
+            printf("corporation : %d \t", current->data.value.corp_code);
+        }
+        current = current->next;
+    }
+    printf("\n");
+}
+
 int main()
 {
     char city[100];
@@ -152,6 +252,23 @@ int main()
     scanf("%d", &corp_a);
     printf("enter second corporation  : \n");
     scanf("%d", &corp_b);
-
+    ll_a = malloc(sizeof(linked_list_t));
+    ll_a->head = NULL;
+    ll_a->tail = NULL;
+    ll_b = malloc(sizeof(linked_list_t));
+    ll_b->head = NULL;
+    ll_b->tail = NULL;
+    get_ancestors(tree_root, corp_a, ll_a);
+    get_ancestors(tree_root, corp_b, ll_b);
+    printf("%d , %d =>", corp_a, corp_b);
+    if (strcmp(ll_a->head->data.value.town, ll_b->head->data.value.town) == 0)
+    {
+        printf(" %s,", ll_a->head->data.value.town);
+    }
+    if (strcmp(ll_a->head->next->data.value.suburbs, ll_b->head->next->data.value.suburbs) == 0)
+    {
+        printf(" %s,", ll_a->head->next->data.value.suburbs);
+    }
+    printf(" %s\n", tree_root->value.city);
     return 0;
 }
